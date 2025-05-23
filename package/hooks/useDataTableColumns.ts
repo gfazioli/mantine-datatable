@@ -253,12 +253,24 @@ export const useDataTableColumns = <T>({
   }, [columns, columnsOrder, columnsToggle, columnsWidth]);
 
   const setColumnWidth = (accessor: string, width: string | number) => {
-    const newColumnsWidth = columnsWidth.map((column) => {
-      if (!column[accessor]) {
-        return column;
+    const columnDef = columns.find(c => c.accessor === accessor);
+    let newWidth = width;
+
+    if (columnDef && typeof columnDef.minResizableWidth === 'number' && typeof width === 'number') {
+      newWidth = Math.max(width, columnDef.minResizableWidth);
+    } else if (columnDef && typeof columnDef.minResizableWidth === 'number' && typeof width === 'string' && width.endsWith('px')) {
+      const numericWidth = parseFloat(width.slice(0, -2));
+      if (!isNaN(numericWidth)) {
+        newWidth = `${Math.max(numericWidth, columnDef.minResizableWidth)}px`;
+      }
+    }
+
+    const newColumnsWidth = columnsWidth.map((colWidth) => {
+      if (!colWidth[accessor]) {
+        return colWidth;
       }
       return {
-        [accessor]: width,
+        [accessor]: newWidth,
       };
     });
 

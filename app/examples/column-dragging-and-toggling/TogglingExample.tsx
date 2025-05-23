@@ -1,14 +1,16 @@
 'use client';
 
-import { Button, Group, Stack, Text } from '@mantine/core';
-import { IconBuildingCommunity, IconBuildingSkyscraper, IconMap, IconRoadSign } from '@tabler/icons-react';
+import { Group, Stack, Text } from '@mantine/core';
+import { IconBuildingCommunity, IconBuildingSkyscraper, IconColumns, IconMap, IconRoadSign } from '@tabler/icons-react';
 import { DataTable, useDataTableColumns } from '__PACKAGE__';
 import { companies } from '~/data';
 
 export default function TogglingExample() {
   const key = 'toggleable-example';
 
-  const { effectiveColumns, resetColumnsToggle } = useDataTableColumns({
+  // This example uses useDataTableColumns to persist the column toggle state in localStorage
+  // and share it between multiple DataTable instances
+  const { effectiveColumns } = useDataTableColumns({
     key,
     columns: [
       {
@@ -22,8 +24,8 @@ export default function TogglingExample() {
           </Group>
         ),
         width: '40%',
-        toggleable: true,
-        defaultToggle: false,
+        toggleable: true, // This column can be toggled
+        defaultToggle: false, // This column will be hidden by default
       },
       {
         accessor: 'streetAddress',
@@ -36,7 +38,7 @@ export default function TogglingExample() {
           </Group>
         ),
         width: '60%',
-        toggleable: true,
+        toggleable: true, // This column can be toggled
       },
       {
         accessor: 'city',
@@ -49,7 +51,7 @@ export default function TogglingExample() {
           </Group>
         ),
         width: 160,
-        toggleable: true,
+        toggleable: true, // This column can be toggled
       },
       {
         accessor: 'state',
@@ -57,6 +59,7 @@ export default function TogglingExample() {
         title: (
           <Group justify="right">
             <IconMap size={16} />
+            {/* This column is not toggleable by default as `toggleable` is not set */}
           </Group>
         ),
       },
@@ -65,16 +68,29 @@ export default function TogglingExample() {
 
   return (
     <Stack>
+      <Text>
+        The DataTable now features a dedicated `ColumnToggleButton` (by default in the top-right corner)
+        to control column visibility.
+        You can customize its appearance and behavior using the `columnToggleButtonProps` property.
+      </Text>
       <DataTable
         withTableBorder
         withColumnBorders
-        storeColumnsKey={key}
+        storeColumnsKey={key} // Ensures column state is persisted
         records={companies}
         columns={effectiveColumns}
+        // columnToggleButtonProps can be used to customize the button
+        // Here's an example of changing its icon and label:
+        columnToggleButtonProps={{
+          // `icon` is a ReactNode, defaults to <IconSettings />
+          icon: <IconColumns size={16} />,
+          // `label` is a ReactNode, defaults to "Columns"
+          label: 'Manage Columns',
+          // `buttonProps` are Mantine Button component props
+          buttonProps: { variant: 'outline' },
+        }}
       />
-      <Group justify="right">
-        <Button onClick={resetColumnsToggle}>Reset toggled columns</Button>
-      </Group>
+      {/* The old "Reset toggled columns" button is removed as the ColumnToggleButton handles this functionality. */}
     </Stack>
   );
 }

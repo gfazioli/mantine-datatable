@@ -5,10 +5,11 @@ import { useDataTableColumnsContext } from './DataTableColumns.context';
 type DataTableResizableHeaderHandleProps = {
   accessor: string;
   columnRef: MutableRefObject<HTMLTableCellElement | null>;
+  minResizableWidth?: number;
 };
 
 export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHandleProps) => {
-  const { accessor, columnRef } = props;
+  const { accessor, columnRef, minResizableWidth } = props;
 
   const dragRef = useRef<HTMLTableCellElement>(null);
 
@@ -31,9 +32,13 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
 
     const delta = event.clientX - columnRef.current.getBoundingClientRect().right;
 
-    const width = columnRef.current.getBoundingClientRect().width + delta;
+    let newCalculatedWidth = columnRef.current.getBoundingClientRect().width + delta;
 
-    const widthString = `${width}px`;
+    if (typeof minResizableWidth === 'number' && newCalculatedWidth < minResizableWidth) {
+      newCalculatedWidth = minResizableWidth;
+    }
+
+    const widthString = `${newCalculatedWidth}px`;
 
     columnRef.current.style.width = widthString;
 

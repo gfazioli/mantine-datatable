@@ -16,4 +16,5 @@ export * from './DataTableSelectionTrigger';
 export * from './DataTableSortProps';
 export * from './DataTableSortStatus';
 export * from './DataTableVerticalAlign';
+export * from './DataTableColumnToggleButtonProps';
 export * from './utils';

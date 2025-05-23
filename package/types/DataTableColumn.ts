@@ -51,6 +51,12 @@ export type DataTableColumn<T = Record<string, unknown>> = {
   resizable?: boolean;
 
   /**
+   * Minimum width in pixels the column can be resized to.
+   * Only applicable if `resizable` is true.
+   */
+  minResizableWidth?: number;
+
+  /**
    * If set to true, the column will be toggled by default.
    */
   defaultToggle?: boolean;

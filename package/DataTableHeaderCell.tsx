@@ -1,4 +1,4 @@
-import { ActionIcon, Box, Center, Flex, Group, TableTh, type MantineStyleProp, type MantineTheme } from '@mantine/core';
+import { ActionIcon, Box, Center, Flex, Group, TableTh, type MantineStyleProp, type MantineTheme, useMantineTheme } from '@mantine/core';
 import clsx from 'clsx';
 import { useRef, useState } from 'react';
 import { useDataTableColumnsContext } from './DataTableColumns.context';
@@ -8,7 +8,7 @@ import { useMediaQueryStringOrFunction } from './hooks';
 import { IconArrowUp } from './icons/IconArrowUp';
 import { IconArrowsVertical } from './icons/IconArrowsVertical';
 import { IconGripVertical } from './icons/IconGripVertical';
-import { IconX } from './icons/IconX';
+// IconX is no longer used
 import type { DataTableColumn, DataTableSortProps } from './types';
 import { ELLIPSIS, NOWRAP, TEXT_ALIGN_CENTER, TEXT_ALIGN_LEFT, TEXT_ALIGN_RIGHT } from './utilityClasses';
 import { humanize } from './utils';
@@ -34,6 +34,7 @@ type DataTableHeaderCellProps<T> = {
   | 'filterPopoverProps'
   | 'filtering'
   | 'sortKey'
+  | 'minResizableWidth' // Add minResizableWidth here
 >;
 
 export function DataTableHeaderCell<T>({
@@ -55,10 +56,13 @@ export function DataTableHeaderCell<T>({
   filterPopoverProps,
   filtering,
   sortKey,
+  minResizableWidth, // Destructure minResizableWidth
 }: DataTableHeaderCellProps<T>) {
-  const { setSourceColumn, setTargetColumn, swapColumns, setColumnsToggle } = useDataTableColumnsContext();
+  const { setSourceColumn, setTargetColumn, swapColumns } = useDataTableColumnsContext();
   const [dragOver, setDragOver] = useState<boolean>(false);
+  const [dropIndicatorSide, setDropIndicatorSide] = useState<'left' | 'right' | null>(null);
   const columnRef = useRef<HTMLTableCellElement | null>(null);
+  const theme = useMantineTheme();
 
   if (!useMediaQueryStringOrFunction(visibleMediaQuery)) return null;
   const text = title ?? humanize(accessor as string);
@@ -90,43 +94,47 @@ export function DataTableHeaderCell<T>({
 
   const handleColumnDragOver = (e: React.DragEvent) => {
     e.preventDefault();
+    if (!draggable) return;
     setTargetColumn(accessor as string);
     setDragOver(true);
+    // For simplicity, always show indicator on the left for now
+    // Later, this could be refined if columnsOrder becomes accessible
+    setDropIndicatorSide('left');
   };
 
   const handleColumnDrop = () => {
-    setTargetColumn(accessor as string);
+    if (!draggable) return;
+    setTargetColumn(accessor as string); // Ensure target is set on drop
     setDragOver(false);
+    setDropIndicatorSide(null);
     swapColumns();
   };
 
-  const handleColumnDragEnter = () => {
-    setDragOver(true);
+  const handleColumnDragEnter = (e: React.DragEvent) => {
+    if (!draggable) return;
+    // Only set target if it's a valid drop target (another column header)
+    // This check might be too restrictive if dragging over other elements is needed for some reason
+    if ((e.target as HTMLElement).closest?.('.mantine-datatable-header-cell-draggable')) {
+      setTargetColumn(accessor as string);
+      setDragOver(true);
+      setDropIndicatorSide('left');
+    }
   };
 
-  const handleColumnDragLeave = () => {
+  const handleColumnDragLeave = ()_ => {
+    if (!draggable) return;
     setDragOver(false);
+    setDropIndicatorSide(null);
   };
 
-  const handleColumnToggle = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation();
-
-    setColumnsToggle((columnsToggle) =>
-      columnsToggle.map((c) => {
-        if (c.accessor === accessor) {
-          return { ...c, toggled: false };
-        }
-        return c;
-      })
-    );
-  };
+  // handleColumnToggle is no longer used
 
   return (
     <TableTh
       className={clsx(
         {
           'mantine-datatable-header-cell-sortable': sortable,
-          'mantine-datatable-header-cell-toggleable': toggleable,
+          // 'mantine-datatable-header-cell-toggleable': toggleable, // Removed toggleable class
           'mantine-datatable-header-cell-resizable': resizable,
         },
         className
@@ -135,6 +143,8 @@ export function DataTableHeaderCell<T>({
         {
           width,
           ...(!resizable ? { minWidth: width, maxWidth: width } : { minWidth: '1px' }),
+          borderLeft: dropIndicatorSide === 'left' ? `2px solid ${theme.colors.blue[theme.fn.primaryShade()]}` : undefined,
+          borderRight: dropIndicatorSide === 'right' ? `2px solid ${theme.colors.blue[theme.fn.primaryShade()]}` : undefined,
         },
         style,
       ]}
@@ -189,13 +199,7 @@ export function DataTableHeaderCell<T>({
             {text}
           </Box>
         </Flex>
-        {toggleable ? (
-          <Center className="mantine-datatable-header-cell-toggleable-icon" role="img" aria-label="Toggle column">
-            <ActionIcon size="xs" variant="light" onClick={handleColumnToggle}>
-              <IconX />
-            </ActionIcon>
-          </Center>
-        ) : null}
+        {/* Toggleable icon removed */}
         {sortable || sortStatus?.columnAccessor === accessor ? (
           <>
             {sortStatus?.columnAccessor === accessor ? (
@@ -225,7 +229,7 @@ export function DataTableHeaderCell<T>({
           </DataTableHeaderCellFilter>
         ) : null}
       </Group>
-      {resizable ? <DataTableResizableHeaderHandle accessor={accessor as string} columnRef={columnRef} /> : null}
+      {resizable ? <DataTableResizableHeaderHandle accessor={accessor as string} columnRef={columnRef} minResizableWidth={minResizableWidth} /> : null}
     </TableTh>
   );
 }

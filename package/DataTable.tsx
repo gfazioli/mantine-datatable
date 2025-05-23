@@ -1,7 +1,8 @@
-import { Box, Table, type MantineSize } from '@mantine/core';
+import { Box, Group, Table, type MantineSize } from '@mantine/core';
 import { useDebouncedCallback, useMergedRef } from '@mantine/hooks';
 import clsx from 'clsx';
 import { useCallback, useMemo, useState } from 'react';
+import { ColumnToggleButton } from './ColumnToggleButton';
 import { DataTableColumnsProvider } from './DataTableDragToggleProvider';
 import { DataTableEmptyRow } from './DataTableEmptyRow';
 import { DataTableEmptyState } from './DataTableEmptyState';
@@ -19,7 +20,7 @@ import {
   useLastSelectionChangeIndex,
   useRowExpansion,
 } from './hooks';
-import type { DataTableProps } from './types';
+import type { DataTableColumnToggleButtonProps, DataTableProps } from './types';
 import { TEXT_SELECTION_DISABLED } from './utilityClasses';
 import { differenceBy, getRecordId, uniqBy } from './utils';
 
@@ -129,6 +130,7 @@ export function DataTable<T>({
   styles,
   rowFactory,
   tableWrapper,
+  columnToggleButtonProps,
   ...otherProps
 }: DataTableProps<T>) {
   const {
@@ -511,6 +513,11 @@ export function DataTable<T>({
         >
           {emptyState}
         </DataTableEmptyState>
+        {dragToggle.columnsToggle.some((c) => c.toggleable) && (
+          <Group sx={{ position: 'absolute', top: 0, right: 0, padding: '8px' }}>
+            <ColumnToggleButton {...columnToggleButtonProps} />
+          </Group>
+        )}
       </Box>
     </DataTableColumnsProvider>
   );
